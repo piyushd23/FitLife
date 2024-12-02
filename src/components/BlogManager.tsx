@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Edit2, Trash2, Plus } from 'lucide-react';
-import { useBlogs } from '../hooks/useBlogs';
+import { useBlogContext } from '../context/BlogContext';
 
 export function BlogManager() {
-  const { blogs, addBlog, updateBlog, deleteBlog } = useBlogs();
+  const { blogs, addBlog, updateBlog, deleteBlog } = useBlogContext();
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({ title: '', content: '', image: '' });
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -33,7 +33,7 @@ export function BlogManager() {
         {!isEditing && (
           <button
             onClick={() => setIsEditing(true)}
-            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            className="flex items-center gap-2 bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors"
           >
             <Plus className="h-5 w-5" />
             Add New Post
@@ -75,7 +75,7 @@ export function BlogManager() {
           <div className="flex gap-2">
             <button
               type="submit"
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+              className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700"
             >
               {editingId ? 'Update Post' : 'Save Post'}
             </button>

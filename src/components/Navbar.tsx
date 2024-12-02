@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Dumbbell } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { Dumbbell, Menu, X } from 'lucide-react';
 
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -11,6 +14,18 @@ export function Navbar() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const navLinks = [
+    { path: '/', label: 'Home' },
+    { path: '/classes', label: 'Classes' },
+    { path: '/trainers', label: 'Trainers' },
+    { path: '/pricing', label: 'Pricing' },
+  ];
+
+  const isActive = (path: string) => {
+    if (path === '/' && location.pathname !== '/') return false;
+    return location.pathname.startsWith(path);
+  };
 
   return (
     <nav
@@ -26,10 +41,10 @@ export function Navbar() {
         } rounded-full`}
       >
         <div className="flex items-center justify-between py-3">
-          <div className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2">
             <Dumbbell
               className={`h-8 w-8 ${
-                isScrolled ? 'text-blue-600' : 'text-white'
+                isScrolled ? 'text-primary-600' : 'text-white'
               }`}
             />
             <span
@@ -39,59 +54,88 @@ export function Navbar() {
             >
               FitLife Hub
             </span>
-          </div>
+          </Link>
+
+          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
-            <a
-              href="#home"
-              className={`transition-colors ${
-                isScrolled
-                  ? 'text-gray-700 hover:text-blue-600'
-                  : 'text-white/90 hover:text-white'
-              }`}
-            >
-              Home
-            </a>
-            <a
-              href="#classes"
-              className={`transition-colors ${
-                isScrolled
-                  ? 'text-gray-700 hover:text-blue-600'
-                  : 'text-white/90 hover:text-white'
-              }`}
-            >
-              Classes
-            </a>
-            <a
-              href="#trainers"
-              className={`transition-colors ${
-                isScrolled
-                  ? 'text-gray-700 hover:text-blue-600'
-                  : 'text-white/90 hover:text-white'
-              }`}
-            >
-              Trainers
-            </a>
-            <a
-              href="#pricing"
-              className={`transition-colors ${
-                isScrolled
-                  ? 'text-gray-700 hover:text-blue-600'
-                  : 'text-white/90 hover:text-white'
-              }`}
-            >
-              Pricing
-            </a>
-            <button
+            {navLinks.map((link) => (
+              <Link
+                key={link.path}
+                to={link.path}
+                className={`transition-colors ${
+                  isScrolled
+                    ? isActive(link.path)
+                      ? 'text-primary-600'
+                      : 'text-gray-700 hover:text-primary-600'
+                    : isActive(link.path)
+                    ? 'text-white'
+                    : 'text-white/90 hover:text-white'
+                }`}
+              >
+                {link.label}
+              </Link>
+            ))}
+            <Link
+              to="/pricing"
               className={`px-6 py-2 rounded-full transition-colors ${
                 isScrolled
-                  ? 'bg-blue-600 text-white hover:bg-blue-700'
+                  ? 'bg-primary-600 text-white hover:bg-primary-700'
                   : 'bg-white text-gray-900 hover:bg-gray-100'
               }`}
             >
               Join Now
-            </button>
+            </Link>
           </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="md:hidden"
+          >
+            {isMobileMenuOpen ? (
+              <X className={isScrolled ? 'text-gray-900' : 'text-white'} />
+            ) : (
+              <Menu className={isScrolled ? 'text-gray-900' : 'text-white'} />
+            )}
+          </button>
         </div>
+
+        {/* Mobile Navigation */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden py-4 border-t border-gray-200">
+            <div className="flex flex-col gap-4">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`transition-colors ${
+                    isScrolled
+                      ? isActive(link.path)
+                        ? 'text-primary-600'
+                        : 'text-gray-700 hover:text-primary-600'
+                      : isActive(link.path)
+                      ? 'text-white'
+                      : 'text-white/90 hover:text-white'
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              ))}
+              <Link
+                to="/pricing"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={`px-6 py-2 rounded-full transition-colors text-center ${
+                  isScrolled
+                    ? 'bg-primary-600 text-white hover:bg-primary-700'
+                    : 'bg-white text-gray-900 hover:bg-gray-100'
+                }`}
+              >
+                Join Now
+              </Link>
+            </div>
+          </div>
+        )}
       </div>
     </nav>
   );

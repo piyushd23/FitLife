@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface BlogPost {
   id: number;
@@ -9,6 +9,17 @@ interface BlogPost {
   likes: number;
   dislikes: number;
 }
+
+interface BlogContextType {
+  blogs: BlogPost[];
+  addBlog: (blog: Omit<BlogPost, 'id' | 'likes' | 'dislikes'>) => void;
+  updateBlog: (id: number, blog: Partial<BlogPost>) => void;
+  deleteBlog: (id: number) => void;
+  likeBlog: (id: number) => void;
+  dislikeBlog: (id: number) => void;
+}
+
+const BlogContext = createContext<BlogContextType | undefined>(undefined);
 
 const initialBlogs: BlogPost[] = [
   {
@@ -31,33 +42,63 @@ const initialBlogs: BlogPost[] = [
   }
 ];
 
-export function useBlogs() {
-  const [blogs, setBlogs] = useState<BlogPost[]>(initialBlogs);
+export function BlogProvider({ children }: { children: React.ReactNode }) {
+  const [blogs, setBlogs] = useState<BlogPost[]>(() => {
+    const savedBlogs = localStorage.getItem('blogs');
+    return savedBlogs ? JSON.parse(savedBlogs) : initialBlogs;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('blogs', JSON.stringify(blogs));
+  }, [blogs]);
 
   const addBlog = (blog: Omit<BlogPost, 'id' | 'likes' | 'dislikes'>) => {
     const newBlog = {
       ...blog,
-      id: blogs.length + 1,
+      id: blogs.length > 0 ? Math.max(...blogs.map(b => b.id)) + 1 : 1,
       likes: 0,
       dislikes: 0
     };
-    setBlogs([newBlog, ...blogs]);
+    setBlogs(prevBlogs => [newBlog, ...prevBlogs]);
   };
 
   const updateBlog = (id: number, updatedBlog: Partial<BlogPost>) => {
-    setBlogs(blogs.map(blog => 
-      blog.id === id ? { ...blog, ...updatedBlog } : blog
-    ));
+    setBlogs(prevBlogs =>
+      prevBlogs.map(blog => (blog.id === id ? { ...blog, ...updatedBlog } : blog))
+    );
   };
 
   const deleteBlog = (id: number) => {
-    setBlogs(blogs.filter(blog => blog.id !== id));
+    setBlogs(prevBlogs => prevBlogs.filter(blog => blog.id !== id));
   };
 
-  return {
-    blogs,
-    addBlog,
-    updateBlog,
-    deleteBlog
+  const likeBlog = (id: number) => {
+    setBlogs(prevBlogs =>
+      prevBlogs.map(blog =>
+        blog.id === id ? { ...blog, likes: blog.likes + 1 } : blog
+      )
+    );
   };
+
+  const dislikeBlog = (id: number) => {
+    setBlogs(prevBlogs =>
+      prevBlogs.map(blog =>
+        blog.id === id ? { ...blog, dislikes: blog.dislikes + 1 } : blog
+      )
+    );
+  };
+
+  return (
+    <BlogContext.Provider value={{ blogs, addBlog, updateBlog, deleteBlog, likeBlog, dislikeBlog }}>
+      {children}
+    </BlogContext.Provider>
+  );
+}
+
+export function useBlogContext() {
+  const context = useContext(BlogContext);
+  if (context === undefined) {
+    throw new Error('useBlogContext must be used within a BlogProvider');
+  }
+  return context;
 }
